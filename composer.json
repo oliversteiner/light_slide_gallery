@@ -1,0 +1,14 @@
+{
+  "name": "drupal/light_slide_gallery",
+  "type": "drupal-module",
+  "description": "Lightslider & LightGallery Image Format",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/light_slide_gallery",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/light_slide_gallery",
+    "source": "http://cgit.drupalcode.org/light_slide_gallery"
+  },
+  "require": { }
+}

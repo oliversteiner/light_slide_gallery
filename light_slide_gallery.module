@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Contains light_slide_gallery.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function light_slide_gallery_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the light_slide_gallery module.
+    case 'help.page.light_slide_gallery':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Lightslider &amp; LightGallery Image Format') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function light_slide_gallery_theme() {
+  return [
+    'light_slide_gallery' => [
+      'render element' => 'children',
+    ],
+  ];
+}
