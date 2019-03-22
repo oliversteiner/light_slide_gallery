@@ -2,6 +2,9 @@
 
 namespace Drupal\light_slide_gallery\Plugin\Field\FieldFormatter;
 
+use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\image\Plugin\Field\FieldFormatter\ImageFormatterBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -27,190 +30,308 @@ use Drupal\Core\Cache\Cache;
  */
 class LightSlideGalleryFormatter extends ImageFormatterBase implements ContainerFactoryPluginInterface {
 
-/**
- * The current user.
- *
- * @var \Drupal\Core\Session\AccountInterface
- */
- protected $currentUser;
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
 
-/**
- * The link generator.
- *
- * @var \Drupal\Core\Utility\LinkGeneratorInterface
- */
- protected $linkGenerator;
+  /**
+   * The link generator.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $linkGenerator;
 
-/**
- * The image style entity storage.
- *
- * @var \Drupal\Core\Entity\EntityStorageInterface
- */
- protected $imageStyleStorage;
+  /**
+   * The image style entity storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $imageStyleStorage;
 
-/**
- * Constructs a new LightSlideGalleryFormatter object.
- *
- * @param string $plugin_id
- *   The plugin_id for the formatter.
- * @param mixed $plugin_definition
- *   The plugin implementation definition.
- * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
- *   The definition of the field to which the formatter is associated.
- * @param array $settings
- *   The formatter settings.
- * @param string $label
- *   The formatter label display setting.
- * @param string $view_mode
- *   The view mode.
- * @param array $third_party_settings
- *   Any third party settings settings.
- * @param \Drupal\Core\Session\AccountInterface $current_user
- *   The current user.
- * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
- *   The link generator service.
- * @param \Drupal\Core\Entity\EntityStorageInterface $image_style_storage
- *   The entity storage for the image.
- */
- public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, AccountInterface $current_user, LinkGeneratorInterface $link_generator, EntityStorageInterface $image_style_storage) {
+  /**
+   * Constructs a new LightSlideGalleryFormatter object.
+   *
+   * @param string $plugin_id
+   *   The plugin_id for the formatter.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   The definition of the field to which the formatter is associated.
+   * @param array $settings
+   *   The formatter settings.
+   * @param string $label
+   *   The formatter label display setting.
+   * @param string $view_mode
+   *   The view mode.
+   * @param array $third_party_settings
+   *   Any third party settings settings.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The current user.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The link generator service.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $image_style_storage
+   *   The entity storage for the image.
+   */
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, AccountInterface $current_user, LinkGeneratorInterface $link_generator, EntityStorageInterface $image_style_storage) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->currentUser = $current_user;
     $this->linkGenerator = $link_generator;
     $this->imageStyleStorage = $image_style_storage;
+
   }
 
-/**
- * {@inheritdoc}
- */
- public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-   return new static(
-     $plugin_id,
-     $plugin_definition,
-     $configuration['field_definition'],
-     $configuration['settings'],
-     $configuration['label'],
-     $configuration['view_mode'],
-     $configuration['third_party_settings'],
-     $container->get('current_user'),
-     $container->get('link_generator'),
-     $container->get('entity_type.manager')->getStorage('image_style')
-   );
- }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['label'],
+      $configuration['view_mode'],
+      $configuration['third_party_settings'],
+      $container->get('current_user'),
+      $container->get('link_generator'),
+      $container->get('entity_type.manager')->getStorage('image_style')
+    );
+  }
 
-/**
- * {@inheritdoc}
- */
- public static function defaultSettings() {
-   return [
-     'image_style' => '',
-     'image_link' => '',
-   ] + parent::defaultSettings();
- }
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultSettings() {
+    return [
+        'image_style_default' => '',
+        'image_style_thumbnail' => '',
+        'image_style_fullscreen' => '',
+        'image_link' => '',
+      ] + parent::defaultSettings();
+  }
 
-/**
- * {@inheritdoc}
- */
- public function settingsForm(array $form, FormStateInterface $form_state) {
-   $image_styles = image_style_options(FALSE);
-   $element['image_style'] = [
-     '#title' => t('Image style'),
-     '#type' => 'select',
-     '#default_value' => $this->getSetting('image_style'),
-     '#empty_option' => t('None (original image)'),
-     '#options' => $image_styles,
-     '#description' => [
-       '#markup' => $this->linkGenerator->generate($this->t('Configure Image Styles'), new Url('entity.image_style.collection')),
-       '#access' => $this->currentUser->hasPermission('administer image styles'),
-     ],
-   ];
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $image_styles = image_style_options(FALSE);
 
-   return $element;
- }
+    // Default
+    $element['image_style_default'] = [
+      '#title' => t('Image style Default'),
+      '#type' => 'select',
+      '#default_value' => $this->getSetting('image_style'),
+      '#empty_option' => t('None (original image)'),
+      '#options' => $image_styles,
+    ];
 
-/**
- * {@inheritdoc}
- */
- public function settingsSummary() {
-   $summary = [];
-   $image_styles = image_style_options(FALSE);
+    // Tumbnail
+    $element['image_style_thumbnail'] = [
+      '#title' => t('Image style Thumbnail'),
+      '#type' => 'select',
+      '#default_value' => $this->getSetting('image_style'),
+      '#empty_option' => t('None (original image)'),
+      '#options' => $image_styles,
+    ];
 
-   // Unset possible 'No defined styles' option.
-   unset($image_styles['']);
+    // Fullscreen
+    $element['image_style_fullscreen'] = [
+      '#title' => t('Image style Fullscreen'),
+      '#type' => 'select',
+      '#default_value' => $this->getSetting('image_style'),
+      '#empty_option' => t('None (original image)'),
+      '#options' => $image_styles,
+      '#description' => [
+        '#markup' => $this->linkGenerator->generate($this->t('Configure Image Styles'), new Url('entity.image_style.collection')),
+        '#access' => $this->currentUser->hasPermission('administer image styles'),
+      ],
+    ];
 
-   // Styles could be lost because of enabled/disabled modules that defines
-   // their styles in code.
-   $image_style_setting = $this->getSetting('image_style');
-   if (isset($image_styles[$image_style_setting])) {
-     $summary[] = t('Image style: @style', ['@style' => $image_styles[$image_style_setting]]);
-   }
-   else {
-     $summary[] = t('Original image');
-   }
+    return $element;
+  }
 
-   return $summary;
- }
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+    $image_styles = image_style_options(FALSE);
 
-/**
- * {@inheritdoc}
- */
- public function viewElements(FieldItemListInterface $items, $langcode) {
-   $elements = [];
+    // Unset possible 'No defined styles' option.
+    unset($image_styles['']);
+
+    // Styles could be lost because of enabled/disabled modules that defines
+    // their styles in code.
+    $image_style_setting = $this->getSetting('image_style_default');
+    if (isset($image_styles[$image_style_setting])) {
+      $summary[] = t('Image style: @style', ['@style' => $image_style_setting]);
+    }
+    else {
+      $summary[] = t('Original image');
+    }
+
+    return $summary;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewElements(FieldItemListInterface $items, $langcode) {
+    $elements = [];
+    $images = [];
+    $url = NULL;
+    $files = $this->getEntitiesToView($items, $langcode);
+    $node = $items->getEntity();
+    $nid = $node->id();
+
+    // Early opt-out if the field is empty.
+    if (empty($files)) {
+      return $elements;
+    }
+
+    // Generate ID for js call
+    $field = $items->getName();
+    $slide_id = 'imageGallery-' . $nid . '-' . $field;
+    $slide_id = str_replace('_', '-', $slide_id);
+
+    // Image Style
+    $image_style_default = $this->getSetting('image_style_default');
+    $image_style_thumbnail = $this->getSetting('image_style_thumbnail');
+    $image_style_fullscreen = $this->getSetting('image_style_fullscreen');
+
+
+    // Loop over all images in field
+    foreach ($files as $delta => $file) {
+
+      $image_default = self::createImageStyle($file, $image_style_default);
+      $image_thumbnail = self::createImageStyle($file, $image_style_thumbnail);
+      $image_fullscreen = self::createImageStyle($file, $image_style_fullscreen);
+
+      $images[$delta]['default'] = $image_default;
+      $images[$delta]['thumbnail'] = $image_thumbnail;
+      $images[$delta]['fullscreen'] = $image_fullscreen;
+    }
+
+    $elements = [
+      '#theme' => 'light_slide_gallery',
+      '#images' => $images,
+      '#slide_id' => $slide_id,
+    ];
+
+    $elements['#attached']['library'][] =
+      'light_slide_gallery/light_slide_gallery.main';
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewElementsOriginal(FieldItemListInterface $items, $langcode) {
+    $elements = [];
     $files = $this->getEntitiesToView($items, $langcode);
 
-   // Early opt-out if the field is empty.
-   if (empty($files)) {
-     return $elements;
-   }
+    // Early opt-out if the field is empty.
+    if (empty($files)) {
+      return $elements;
+    }
 
-   $url = NULL;
-   $image_link_setting = $this->getSetting('image_link');
-   // Check if the formatter involves a link.
-   if ($image_link_setting == 'content') {
-     $entity = $items->getEntity();
-     if (!$entity->isNew()) {
-       $url = $entity->toUrl();
-     }
-   }
-   elseif ($image_link_setting == 'file') {
-     $link_file = TRUE;
-   }
+    $url = NULL;
+    $image_link_setting = $this->getSetting('image_link');
+    // Check if the formatter involves a link.
+    if ($image_link_setting === 'content') {
+      $entity = $items->getEntity();
+      if (!$entity->isNew()) {
+        $url = $entity->toUrl();
+      }
+    }
+    elseif ($image_link_setting == 'file') {
+      $link_file = TRUE;
+    }
 
-   $image_style_setting = $this->getSetting('image_style');
+    $image_style_setting = $this->getSetting('image_style');
 
-   // Collect cache tags to be added for each item in the field.
-   $cache_tags = [];
-   if (!empty($image_style_setting)) {
-     $image_style = $this->imageStyleStorage->load($image_style_setting);
-     $cache_tags = $image_style->getCacheTags();
-   }
+    // Collect cache tags to be added for each item in the field.
+    $cache_tags = [];
+    if (!empty($image_style_setting)) {
+      $image_style = $this->imageStyleStorage->load($image_style_setting);
+      $cache_tags = $image_style->getCacheTags();
+    }
 
-   foreach ($files as $delta => $file) {
-     if (isset($link_file)) {
-       $image_uri = $file->getFileUri();
-       $url = Url::fromUri(file_create_url($image_uri));
-     }
+    foreach ($files as $delta => $file) {
+      if (isset($link_file)) {
+        $image_uri = $file->getFileUri();
+        $url = Url::fromUri(file_create_url($image_uri));
+      }
 
-     $cache_tags = Cache::mergeTags($cache_tags, $file->getCacheTags());
+      $cache_tags = Cache::mergeTags($cache_tags, $file->getCacheTags());
 
-     // Extract field item attributes for the theme function, and unset them
-     // from the $item so that the field template does not re-render them.
-     $item = $file->_referringItem;
-     $item_attributes = $item->_attributes;
-     unset($item->_attributes);
+      // Extract field item attributes for the theme function, and unset them
+      // from the $item so that the field template does not re-render them.
+      $item = $file->_referringItem;
+      $item_attributes = $item->_attributes;
+      unset($item->_attributes);
 
-     $elements[$delta] = [
-       '#theme' => 'image_formatter',
-       '#item' => $item,
-       '#item_attributes' => $item_attributes,
-       '#image_style' => $image_style_setting,
-       '#url' => $url,
-       '#cache' => [
-         'tags' => $cache_tags,
-       ],
-     ];
-   }
+      $elements[$delta] = [
+        '#theme' => 'image_formatter',
+        '#item' => $item,
+        '#item_attributes' => $item_attributes,
+        '#image_style' => $image_style_setting,
+        '#url' => $url,
+        '#cache' => [
+          'tags' => $cache_tags,
+        ],
+      ];
+    }
 
-   return $elements;
- }
+    return $elements;
+  }
+
+  public static function createImageStyle($img_id_or_file, $image_style_id, $dont_create = FALSE) {
+    $image = [];
+    $image_style = ImageStyle::load($image_style_id);
+
+    if ($img_id_or_file && $img_id_or_file instanceof FileInterface) {
+      $file = $img_id_or_file;
+
+    }
+    else {
+      $file = File::load($img_id_or_file);
+    }
+
+
+    if ($file && $image_style) {
+      $file_image = \Drupal::service('image.factory')->get($file->getFileUri());
+      /** @var \Drupal\Core\Image\Image $image */
+
+      if ($file_image->isValid()) {
+
+        $image_uri = $file->getFileUri();
+        $destination = $image_style->buildUrl($image_uri);
+
+        if (!file_exists($destination)) {
+          if (!$dont_create) {
+            $image_style->createDerivative($image_uri, $destination);
+          }
+        }
+
+        $file_size = filesize($image_uri);
+        $file_size_formatted = format_size($file_size);
+        list($width, $height) = getimagesize($image_uri);
+
+        $image['url'] = $destination;
+        $image['uri'] = $image_uri;
+        $image['file_size'] = $file_size;
+        $image['file_size_formatted'] = $file_size_formatted;
+        $image['width'] = $width;
+        $image['height'] = $height;
+      }
+    }
+    return $image;
+  }
 
 }

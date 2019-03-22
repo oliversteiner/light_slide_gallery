@@ -1,1 +1,10 @@
-<!-- Add you custom twig html here -->
+<ul id="{{slide_id}}">
+
+  {% for image in images %}
+
+    <li data-thumb="{{image.thumbnail.url}}" data-src="{{image.fullscreen.url}}">
+      <img class="light-slide-gallery-image" src="{{image.default.url}}" />
+    </li>
+  {% endfor %}
+
+</ul>

@@ -1,0 +1,25 @@
+light_slide_gallery.main:
+  css:
+    theme:
+      assets/css/light_slide_gallery.css: {}
+  js:
+    assets/js/light_slide_gallery.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery
+    - core/jquery.once
+    - light_slide_gallery/light_slide_gallery.lightgallery
+
+light_slide_gallery.lightgallery:
+  css:
+    theme:
+      /libraries/lightgallery/dist/css/lightgallery.min.css: {}
+      /libraries/lightgallery/dist/css/lg-transitions.min.css: {}
+      /libraries/lightslider/dist/css/lightslider.min.css: {}
+  js:
+    /libraries/lightgallery/dist/js/lightgallery-all.min.js: {}
+    /libraries/lightslider/dist/js/lightslider.min.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once

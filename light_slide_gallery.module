@@ -29,7 +29,12 @@ function light_slide_gallery_help($route_name, RouteMatchInterface $route_match)
 function light_slide_gallery_theme() {
   return [
     'light_slide_gallery' => [
-      'render element' => 'children',
+     // 'render element' => 'children',
+      'variables' => [
+        'content' => [],
+        'images' => [],
+        'slide_id' => [],
+      ],
     ],
   ];
 }
