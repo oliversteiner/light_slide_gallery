@@ -2,4 +2,4 @@ name: 'Lightslider & LightGallery Image Format'
 type: module
 description: 'Lightslider & LightGallery Image Format'
 core: 8.x
-package: 'image'
+package: 'Light Gallery'
