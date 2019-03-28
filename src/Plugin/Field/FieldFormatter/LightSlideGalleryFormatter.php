@@ -123,7 +123,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $element['image_style_default'] = [
       '#title' => t('Image style Default'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_default'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
     ];
@@ -132,7 +132,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $element['image_style_thumbnail'] = [
       '#title' => t('Image style Thumbnail'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_thumbnail'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
     ];
@@ -141,7 +141,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $element['image_style_fullscreen'] = [
       '#title' => t('Image style Fullscreen'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_fullscreen'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
       '#description' => [
