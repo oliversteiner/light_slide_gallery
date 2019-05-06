@@ -28,8 +28,9 @@ use Drupal\Core\Cache\Cache;
  *   }
  * )
  */
-class LightSlideGalleryFormatter extends ImageFormatterBase implements ContainerFactoryPluginInterface {
-
+class LightSlideGalleryFormatter extends ImageFormatterBase implements
+  ContainerFactoryPluginInterface
+{
   /**
    * The current user.
    *
@@ -75,18 +76,45 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
    * @param \Drupal\Core\Entity\EntityStorageInterface $image_style_storage
    *   The entity storage for the image.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, AccountInterface $current_user, LinkGeneratorInterface $link_generator, EntityStorageInterface $image_style_storage) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    $label,
+    $view_mode,
+    array $third_party_settings,
+    AccountInterface $current_user,
+    LinkGeneratorInterface $link_generator,
+    EntityStorageInterface $image_style_storage
+
+  )
+  {
+    parent::__construct(
+      $plugin_id,
+      $plugin_definition,
+      $field_definition,
+      $settings,
+      $label,
+      $view_mode,
+      $third_party_settings
+    );
     $this->currentUser = $current_user;
     $this->linkGenerator = $link_generator;
     $this->imageStyleStorage = $image_style_storage;
-
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public
+  static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  )
+  {
     return new static(
       $plugin_id,
       $plugin_definition,
@@ -104,7 +132,9 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
+  public
+  static function defaultSettings()
+  {
     return [
         'image_style_default' => '',
         'image_style_thumbnail' => '',
@@ -116,14 +146,16 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    $image_styles = image_style_options(FALSE);
+  public
+  function settingsForm(array $form, FormStateInterface $form_state)
+  {
+    $image_styles = image_style_options(false);
 
     // Default
     $element['image_style_default'] = [
       '#title' => t('Image style Default'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_default'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
     ];
@@ -132,7 +164,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $element['image_style_thumbnail'] = [
       '#title' => t('Image style Thumbnail'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_thumbnail'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
     ];
@@ -141,12 +173,17 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $element['image_style_fullscreen'] = [
       '#title' => t('Image style Fullscreen'),
       '#type' => 'select',
-      '#default_value' => $this->getSetting('image_style'),
+      '#default_value' => $this->getSetting('image_style_fullscreen'),
       '#empty_option' => t('None (original image)'),
       '#options' => $image_styles,
       '#description' => [
-        '#markup' => $this->linkGenerator->generate($this->t('Configure Image Styles'), new Url('entity.image_style.collection')),
-        '#access' => $this->currentUser->hasPermission('administer image styles'),
+        '#markup' => $this->linkGenerator->generate(
+          $this->t('Configure Image Styles'),
+          new Url('entity.image_style.collection')
+        ),
+        '#access' => $this->currentUser->hasPermission(
+          'administer image styles'
+        ),
       ],
     ];
 
@@ -156,9 +193,11 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
+  public
+  function settingsSummary()
+  {
     $summary = [];
-    $image_styles = image_style_options(FALSE);
+    $image_styles = image_style_options(false);
 
     // Unset possible 'No defined styles' option.
     unset($image_styles['']);
@@ -168,22 +207,22 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $image_style_setting = $this->getSetting('image_style_default');
     if (isset($image_styles[$image_style_setting])) {
       $summary[] = t('Image style: @style', ['@style' => $image_style_setting]);
-    }
-    else {
+    } else {
       $summary[] = t('Original image');
     }
 
     return $summary;
   }
 
-
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public
+  function viewElements(FieldItemListInterface $items, $langcode)
+  {
     $elements = [];
     $images = [];
-    $url = NULL;
+    $url = null;
     $files = $this->getEntitiesToView($items, $langcode);
     $node = $items->getEntity();
     $nid = $node->id();
@@ -203,23 +242,29 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     $image_style_thumbnail = $this->getSetting('image_style_thumbnail');
     $image_style_fullscreen = $this->getSetting('image_style_fullscreen');
 
-
     // Loop over all images in field
     foreach ($files as $delta => $file) {
-
       $image_default = self::createImageStyle($file, $image_style_default);
       $image_thumbnail = self::createImageStyle($file, $image_style_thumbnail);
-      $image_fullscreen = self::createImageStyle($file, $image_style_fullscreen);
+      $image_fullscreen = self::createImageStyle(
+        $file,
+        $image_style_fullscreen
+      );
 
       $images[$delta]['default'] = $image_default;
       $images[$delta]['thumbnail'] = $image_thumbnail;
       $images[$delta]['fullscreen'] = $image_fullscreen;
     }
 
-    $elements = [
+/*    $elements = [
       '#theme' => 'light_slide_gallery',
       '#images' => $images,
       '#slide_id' => $slide_id,
+    ];*/
+
+    $elements = [
+      '#markup' => 'test',
+
     ];
 
     $elements['#attached']['library'][] =
@@ -231,7 +276,9 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
   /**
    * {@inheritdoc}
    */
-  public function viewElementsOriginal(FieldItemListInterface $items, $langcode) {
+  public
+  function viewElementsOriginal(FieldItemListInterface $items, $langcode)
+  {
     $elements = [];
     $files = $this->getEntitiesToView($items, $langcode);
 
@@ -240,7 +287,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
       return $elements;
     }
 
-    $url = NULL;
+    $url = null;
     $image_link_setting = $this->getSetting('image_link');
     // Check if the formatter involves a link.
     if ($image_link_setting === 'content') {
@@ -248,9 +295,8 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
       if (!$entity->isNew()) {
         $url = $entity->toUrl();
       }
-    }
-    elseif ($image_link_setting == 'file') {
-      $link_file = TRUE;
+    } elseif ($image_link_setting == 'file') {
+      $link_file = true;
     }
 
     $image_style_setting = $this->getSetting('image_style');
@@ -266,6 +312,8 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
       if (isset($link_file)) {
         $image_uri = $file->getFileUri();
         $url = Url::fromUri(file_create_url($image_uri));
+        $cache_contexts[] = 'url.site';
+
       }
 
       $cache_tags = Cache::mergeTags($cache_tags, $file->getCacheTags());
@@ -284,6 +332,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
         '#url' => $url,
         '#cache' => [
           'tags' => $cache_tags,
+          'contexts' => $cache_contexts,
         ],
       ];
     }
@@ -291,25 +340,27 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     return $elements;
   }
 
-  public static function createImageStyle($img_id_or_file, $image_style_id, $dont_create = FALSE) {
+  public
+  static function createImageStyle(
+    $img_id_or_file,
+    $image_style_id,
+    $dont_create = false
+  )
+  {
     $image = [];
     $image_style = ImageStyle::load($image_style_id);
 
     if ($img_id_or_file && $img_id_or_file instanceof FileInterface) {
       $file = $img_id_or_file;
-
-    }
-    else {
+    } else {
       $file = File::load($img_id_or_file);
     }
-
 
     if ($file && $image_style) {
       $file_image = \Drupal::service('image.factory')->get($file->getFileUri());
       /** @var \Drupal\Core\Image\Image $image */
 
       if ($file_image->isValid()) {
-
         $image_uri = $file->getFileUri();
         $destination = $image_style->buildUrl($image_uri);
 
@@ -333,5 +384,4 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements Container
     }
     return $image;
   }
-
 }
