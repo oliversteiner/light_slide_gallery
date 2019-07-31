@@ -1,10 +1,43 @@
-<ul id="{{slide_id}}">
+{#
+/**
+ * @file
+ * Default theme implementation to display a formatted imagefield slideshow field.
+ *
+ * Available variables:
+ * - image: A collection of image data.
+ *
+ * @see template_preprocess_image_formatter()
+ *
+ * @ingroup themeable
+ */
+#}
 
-  {% for image in images %}
+<div class="light-slide-gallery-wrapper">
 
-    <li data-thumb="{{image.thumbnail.url}}" data-src="{{image.fullscreen.url}}">
-      <img class="light-slide-gallery-image" src="{{image.default.url}}" />
-    </li>
-  {% endfor %}
 
-</ul>
+  {% if gallery_style == 'slider' %}
+
+    {# Slider #}
+    <ul id="{{ slide_id }}" data-gallery-style="{{ gallery_style }}" style="list-style:none">
+      {% for image in images %}
+        <li data-thumb="{{ image.thumbnail.url }}" data-src="{{ image.fullscreen.url }}">
+          <img class="light-slide-gallery-image" src="{{ image.default.url }}"/>
+        </li>
+      {% endfor %}
+    </ul>
+
+  {% else %}
+
+    {# Gallery #}
+    <div id="{{ slide_id }}" data-gallery-style="{{ gallery_style }}" style="list-style:none">
+      {% for image in images %}
+        <a href="{{ image.fullscreen.url }}">
+          <img class="light-slide-gallery-image" src="{{ image.thumbnail.url }}"/>
+        </a>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+
+
+</div>
