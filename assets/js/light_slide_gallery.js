@@ -5,33 +5,39 @@
         .once('lightSlideGallery')
         .each(() => {
 
-          const $el = $('[id^=\'lightSlideGallery\']');
+          const $elems = $('[id^=\'lightSlideGallery\']');
 
-          const gallery_style = $el.data('gallery-style');
+          const scope = this;
 
-          switch (gallery_style) {
+          $elems.each(function() {
+
+            const $elem = $(this);
+            const galleryStyle = $elem.data('gallery-style');
 
 
-            case 'slider':
-              this.slider($el);
-              break;
+            switch (galleryStyle) {
 
-            case 'grid':
-              this.grid($el);
-              break;
+              case 'slider':
+                scope.slider(this);
+                break;
 
-            case 'single-image':
-              this.singleImage($el);
-              break;
+              case 'grid':
+                scope.grid(this);
+                break;
 
-            case 'animated-grid':
-              this.grid($el);
-              break;
+              case 'single-image':
+                scope.singleImage(this);
+                break;
 
-            default:
-              this.grid($el);
-              break;
-          }
+              case 'animated-grid':
+                scope.grid(this);
+                break;
+
+              default:
+                scope.grid(this);
+                break;
+            }
+          });
 
 
         });
@@ -40,7 +46,8 @@
      *
      * @param $el
      */
-    singleImage($el) {
+    singleImage(elem) {
+      const $elem = $(elem);
 
       // options
       const options = {
@@ -50,20 +57,21 @@
         download: false,
         zoom: false,
         loop: false,
-        controls:false,
-        counter:false,
+        controls: false,
+        counter: false,
 
       };
 
       // init
-      $el.lightGallery(options);
+      $elem.lightGallery(options);
     },
 
     /**
      *
      * @param $el
      */
-    grid($el) {
+    grid(elem) {
+      const $elem = $(elem);
 
       // options
       const options = {
@@ -75,14 +83,15 @@
       };
 
       // init
-      $el.lightGallery(options);
+      $elem.lightGallery(options);
     },
 
     /**
      *
      * @param $el
      */
-    slider($el) {
+    slider(elem) {
+      const $elem = $(elem);
 
       // options
       const options = {
@@ -93,9 +102,8 @@
         slideMargin: 0,
         enableDrag: false,
         currentPagerPosition: 'left',
-        onSliderLoad(el) {
-          el.lightGallery({
-            //   selector: '#imageGallery .lslide',
+        onSliderLoad($elem) {
+          $elem.lightGallery({
             selector: '[id^=\'lightSlideGallery\'] .lslide',
             share: false,
             autoplay: false,
@@ -106,7 +114,7 @@
       };
 
       // init
-      $el.lightSlider(options);
+      $elem.lightSlider(options);
     },
   };
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal);
