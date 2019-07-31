@@ -13,14 +13,31 @@
 #}
 
 <div class="light-slide-gallery-wrapper">
-<ul id="{{slide_id}}">
 
-  {% for image in images %}
 
-    <li data-thumb="{{image.thumbnail.url}}" data-src="{{image.fullscreen.url}}">
-      <img class="light-slide-gallery-image" src="{{image.default.url}}" />
-    </li>
-  {% endfor %}
+  {% if gallery_style == 'slider' %}
 
-</ul>
+    {# Slider #}
+    <ul id="{{ slide_id }}" data-gallery-style="{{ gallery_style }}" style="list-style:none">
+      {% for image in images %}
+        <li data-thumb="{{ image.thumbnail.url }}" data-src="{{ image.fullscreen.url }}">
+          <img class="light-slide-gallery-image" src="{{ image.default.url }}"/>
+        </li>
+      {% endfor %}
+    </ul>
+
+  {% else %}
+
+    {# Gallery #}
+    <div id="{{ slide_id }}" data-gallery-style="{{ gallery_style }}" style="list-style:none">
+      {% for image in images %}
+        <a href="{{ image.fullscreen.url }}">
+          <img class="light-slide-gallery-image" src="{{ image.thumbnail.url }}"/>
+        </a>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+
+
 </div>

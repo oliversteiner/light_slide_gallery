@@ -87,9 +87,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     AccountInterface $current_user,
     LinkGeneratorInterface $link_generator,
     EntityStorageInterface $image_style_storage
-
-  )
-  {
+  ) {
     parent::__construct(
       $plugin_id,
       $plugin_definition,
@@ -107,14 +105,12 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
   /**
    * {@inheritdoc}
    */
-  public
-  static function create(
+  public static function create(
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
     $plugin_definition
-  )
-  {
+  ) {
     return new static(
       $plugin_id,
       $plugin_definition,
@@ -132,24 +128,25 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
   /**
    * {@inheritdoc}
    */
-  public
-  static function defaultSettings()
+  public static function defaultSettings()
   {
     return [
-        'image_style_default' => '',
-        'image_style_thumbnail' => '',
-        'image_style_fullscreen' => '',
-        'image_link' => '',
-      ] + parent::defaultSettings();
+      'image_style_default' => '',
+      'image_style_thumbnail' => '',
+      'image_style_fullscreen' => '',
+      'gallery_style' => 0,
+      'image_link' => '',
+    ] + parent::defaultSettings();
   }
 
   /**
    * {@inheritdoc}
    */
-  public
-  function settingsForm(array $form, FormStateInterface $form_state)
+  public function settingsForm(array $form, FormStateInterface $form_state)
   {
     $image_styles = image_style_options(false);
+
+    $gallery_styles = self::gallery_styles_options();
 
     // Default
     $element['image_style_default'] = [
@@ -187,17 +184,25 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       ],
     ];
 
+    // Gallery Style
+    $element['gallery_style'] = [
+      '#title' => t('Gallery Style'),
+      '#type' => 'select',
+      '#default_value' => $this->getSetting('gallery_style'),
+      '#options' => $gallery_styles,
+    ];
+
     return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public
-  function settingsSummary()
+  public function settingsSummary()
   {
     $summary = [];
     $image_styles = image_style_options(false);
+    $gallery_styles = self::gallery_styles_options();
 
     // Unset possible 'No defined styles' option.
     unset($image_styles['']);
@@ -211,14 +216,20 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       $summary[] = t('Original image');
     }
 
+    // Gallery Style
+    $gallery_style_setting = $this->getSetting('gallery_style');
+    if (isset($gallery_style_setting)) {
+      $summary[] = t('Gallery style: @style', [
+        '@style' => $gallery_styles[$gallery_style_setting],
+      ]);
+    }
     return $summary;
   }
 
   /**
    * {@inheritdoc}
    */
-  public
-  function viewElements(FieldItemListInterface $items, $langcode)
+  public function viewElements(FieldItemListInterface $items, $langcode)
   {
     $elements = [];
     $images = [];
@@ -232,12 +243,14 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       return $elements;
     }
 
-
-
     // Generate ID for js call
     $field = $items->getName();
-    $slide_id = 'imageGallery-' . $nid . '-' . $field;
-    $slide_id = str_replace('_', '-', $slide_id);
+    $gallery_style = $this->getSetting('gallery_style');
+
+
+
+    $slide_id = 'imageGallery' . '-'. $nid . '-' . $field;
+    $slide_id = str_replace(array('_', ' '), '-', $slide_id);
 
     // Image Style
     $image_style_default = $this->getSetting('image_style_default');
@@ -264,15 +277,13 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     $item_attributes = $item->_attributes;
     unset($item->_attributes);
 
-
-
-
     $elements = [
       '#theme' => 'light_slide_gallery',
       '#item' => $item,
       '#item_attributes' => $item_attributes,
       '#images' => $images,
       '#slide_id' => $slide_id,
+      '#gallery_style' => $gallery_style,
     ];
 
     // Not to cache this field formatter.
@@ -284,80 +295,11 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     return $elements;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public
-  function viewElementsOriginal(FieldItemListInterface $items, $langcode)
-  {
-    $elements = [];
-    $files = $this->getEntitiesToView($items, $langcode);
-
-    // Early opt-out if the field is empty.
-    if (empty($files)) {
-      return $elements;
-    }
-
-    $url = null;
-    $image_link_setting = $this->getSetting('image_link');
-    // Check if the formatter involves a link.
-    if ($image_link_setting === 'content') {
-      $entity = $items->getEntity();
-      if (!$entity->isNew()) {
-        $url = $entity->toUrl();
-      }
-    } elseif ($image_link_setting == 'file') {
-      $link_file = true;
-    }
-
-    $image_style_setting = $this->getSetting('image_style');
-
-    // Collect cache tags to be added for each item in the field.
-    $cache_tags = [];
-    if (!empty($image_style_setting)) {
-      $image_style = $this->imageStyleStorage->load($image_style_setting);
-      $cache_tags = $image_style->getCacheTags();
-    }
-
-    foreach ($files as $delta => $file) {
-      if (isset($link_file)) {
-        $image_uri = $file->getFileUri();
-        $url = Url::fromUri(file_create_url($image_uri));
-        $cache_contexts[] = 'url.site';
-
-      }
-
-      $cache_tags = Cache::mergeTags($cache_tags, $file->getCacheTags());
-
-      // Extract field item attributes for the theme function, and unset them
-      // from the $item so that the field template does not re-render them.
-      $item = $file->_referringItem;
-      $item_attributes = $item->_attributes;
-      unset($item->_attributes);
-
-      $elements[$delta] = [
-        '#theme' => 'image_formatter',
-        '#item' => $item,
-        '#item_attributes' => $item_attributes,
-        '#image_style' => $image_style_setting,
-        '#url' => $url,
-        '#cache' => [
-          'tags' => $cache_tags,
-          'contexts' => $cache_contexts,
-        ],
-      ];
-    }
-
-    return $elements;
-  }
-
-  public
-  static function createImageStyle(
+  public static function createImageStyle(
     $img_id_or_file,
     $image_style_id,
     $dont_create = false
-  )
-  {
+  ) {
     $image = [];
     $image_style = ImageStyle::load($image_style_id);
 
@@ -394,5 +336,10 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       }
     }
     return $image;
+  }
+
+  public static function gallery_styles_options()
+  {
+    return ['slider' => 'Slider', 'test' => 'Grid', 'animated_grid' => 'Animated Grid', ];
   }
 }
