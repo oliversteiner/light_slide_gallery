@@ -247,9 +247,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     $field = $items->getName();
     $gallery_style = $this->getSetting('gallery_style');
 
-
-
-    $slide_id = 'imageGallery' . '-'. $nid . '-' . $field;
+    $slide_id = 'imageGallery' . '-' . $nid . '-' . $field;
     $slide_id = str_replace(array('_', ' '), '-', $slide_id);
 
     // Image Style
@@ -340,6 +338,11 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
 
   public static function gallery_styles_options()
   {
-    return ['slider' => 'Slider', 'test' => 'Grid', 'animated_grid' => 'Animated Grid', ];
+    return [
+      'slider' => 'Slider',
+      'test' => 'Grid',
+      'animated_grid' => 'Animated Grid',
+      'single_image' => 'Single Image',
+    ];
   }
 }

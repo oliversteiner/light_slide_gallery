@@ -23,6 +23,9 @@
               this.grid($el);
               break;
 
+            case 'single-image':
+              this.singleImage($el);
+              break;
 
             case 'animated-grid':
               this.grid($el);
@@ -35,6 +38,28 @@
 
 
         });
+    },
+    /**
+     *
+     * @param $el
+     */
+    singleImage($el) {
+
+      // options
+      const options = {
+        thumbnail: false,
+        share: false,
+        autoplay: false,
+        download: false,
+        zoom: false,
+        loop: false,
+        controls:false,
+        counter:false,
+
+      };
+
+      // init
+      $el.lightGallery(options);
     },
 
     /**
