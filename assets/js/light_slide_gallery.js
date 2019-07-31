@@ -13,6 +13,8 @@
 
 
           switch (gallery_style) {
+
+
             case 'slider':
               this.slider($el);
               break;
