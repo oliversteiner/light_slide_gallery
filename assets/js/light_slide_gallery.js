@@ -81,7 +81,7 @@
         },
       };
 
-      / init
+      // init
       $el.lightSlider(options);
     },
   };
