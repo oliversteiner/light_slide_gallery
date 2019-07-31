@@ -5,12 +5,9 @@
         .once('lightSlideGallery')
         .each(() => {
 
-          const $el = $('[id^=\'imageGallery\']');
+          const $el = $('[id^=\'lightSlideGallery\']');
 
           const gallery_style = $el.data('gallery-style');
-
-          console.log('gallery_style', gallery_style);
-
 
           switch (gallery_style) {
 
@@ -99,7 +96,7 @@
         onSliderLoad(el) {
           el.lightGallery({
             //   selector: '#imageGallery .lslide',
-            selector: '[id^=\'imageGallery\'] .lslide',
+            selector: '[id^=\'lightSlideGallery\'] .lslide',
             share: false,
             autoplay: false,
             download: false,

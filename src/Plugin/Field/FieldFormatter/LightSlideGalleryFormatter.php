@@ -247,7 +247,7 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     $field = $items->getName();
     $gallery_style = $this->getSetting('gallery_style');
 
-    $slide_id = 'imageGallery' . '-' . $nid . '-' . $field;
+    $slide_id = 'lightSlideGallery' . '-' . $nid . '-' . $field;
     $slide_id = str_replace(array('_', ' '), '-', $slide_id);
 
     // Image Style
