@@ -232,6 +232,8 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       return $elements;
     }
 
+
+
     // Generate ID for js call
     $field = $items->getName();
     $slide_id = 'imageGallery-' . $nid . '-' . $field;
@@ -256,16 +258,25 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       $images[$delta]['fullscreen'] = $image_fullscreen;
     }
 
-/*    $elements = [
-      '#theme' => 'light_slide_gallery',
-      '#images' => $images,
-      '#slide_id' => $slide_id,
-    ];*/
+    // Extract field item attributes for the theme function, and unset them
+    // from the $item so that the field template does not re-render them.
+    $item = $file->_referringItem;
+    $item_attributes = $item->_attributes;
+    unset($item->_attributes);
+
+
+
 
     $elements = [
-      '#markup' => 'test',
-
+      '#theme' => 'light_slide_gallery',
+      '#item' => $item,
+      '#item_attributes' => $item_attributes,
+      '#images' => $images,
+      '#slide_id' => $slide_id,
     ];
+
+    // Not to cache this field formatter.
+    $elements['#cache']['max-age'] = 0;
 
     $elements['#attached']['library'][] =
       'light_slide_gallery/light_slide_gallery.main';

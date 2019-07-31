@@ -1,3 +1,18 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a formatted imagefield slideshow field.
+ *
+ * Available variables:
+ * - image: A collection of image data.
+ *
+ * @see template_preprocess_image_formatter()
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="light-slide-gallery-wrapper">
 <ul id="{{slide_id}}">
 
   {% for image in images %}
@@ -8,3 +23,4 @@
   {% endfor %}
 
 </ul>
+</div>
