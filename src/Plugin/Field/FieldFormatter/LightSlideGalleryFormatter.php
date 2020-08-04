@@ -238,6 +238,9 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     $node = $items->getEntity();
     $nid = $node->id();
 
+    // Collect cache tags to be added for each item in the field.
+    $base_cache_tags = [];
+
     // Early opt-out if the field is empty.
     if (empty($files)) {
       return $elements;
@@ -256,7 +259,9 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
     $image_style_fullscreen = $this->getSetting('image_style_fullscreen');
 
     // Loop over all images in field
+    $cache_contexts = [];
     foreach ($files as $delta => $file) {
+
       $image_default = self::createImageStyle($file, $image_style_default);
       $image_thumbnail = self::createImageStyle($file, $image_style_thumbnail);
       $image_fullscreen = self::createImageStyle(
@@ -267,25 +272,29 @@ class LightSlideGalleryFormatter extends ImageFormatterBase implements
       $images[$delta]['default'] = $image_default;
       $images[$delta]['thumbnail'] = $image_thumbnail;
       $images[$delta]['fullscreen'] = $image_fullscreen;
-    }
+
 
     // Extract field item attributes for the theme function, and unset them
     // from the $item so that the field template does not re-render them.
     $item = $file->_referringItem;
     $item_attributes = $item->_attributes;
-    unset($item->_attributes);
 
-    $elements = [
+      unset($item->_attributes);
+  }
+      $cache_tags = Cache::mergeTags($base_cache_tags, $file->getCacheTags());
+    $elements[] = [
       '#theme' => 'light_slide_gallery',
       '#item' => $item,
       '#item_attributes' => $item_attributes,
       '#images' => $images,
+
       '#slide_id' => $slide_id,
       '#gallery_style' => $gallery_style,
+      '#cache' => [
+        'tags' => $cache_tags,
+        'contexts' => $cache_contexts,
+      ],
     ];
-
-    // Not to cache this field formatter.
-    $elements['#cache']['max-age'] = 0;
 
     $elements['#attached']['library'][] =
       'light_slide_gallery/light_slide_gallery.main';
